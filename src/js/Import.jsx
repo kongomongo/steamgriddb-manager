@@ -8,9 +8,10 @@ import ImportAllButton from './Components/Import/ImportAllButton';
 import Spinner from './Components/spinner';
 import Steam from './Steam';
 import platformModules from './importers';
+import SGDB_Localfixes from './SGDB_Localfixes';
 
 const Store = window.require('electron-store');
-const SGDB = window.require('steamgriddb');
+// const SGDB = window.require('steamgriddb');
 const { metrohash64 } = window.require('metrohash');
 const log = window.require('electron-log');
 
@@ -40,7 +41,8 @@ class Import extends React.Component {
       error: false,
     }));
 
-    this.SGDB = new SGDB('b971a6f5f280490ab62c0ee7d0fd1d16');
+    // this.SGDB = new SGDB('b971a6f5f280490ab62c0ee7d0fd1d16');
+    this.SGDB = new SGDB_Localfixes('b971a6f5f280490ab62c0ee7d0fd1d16');
     this.lastNonSteamGames = null;
 
     this.state = {

@@ -7,16 +7,17 @@ import PubSub from 'pubsub-js';
 import TopBlur from './Components/TopBlur';
 import Spinner from './Components/spinner';
 import Steam from './Steam';
+import SGDB_Localfixes from './SGDB_Localfixes';
 
-const SGDB = window.require('steamgriddb');
 const log = window.require('electron-log');
+//const SGDB = window.require('steamgriddb');
 
 class Search extends React.Component {
   constructor(props) {
     super(props);
 
     this.onClick = this.onClick.bind(this);
-    this.SGDB = new SGDB('b971a6f5f280490ab62c0ee7d0fd1d16');
+    this.SGDB = new SGDB_Localfixes('b971a6f5f280490ab62c0ee7d0fd1d16');
 
     const { location } = this.props;
 
