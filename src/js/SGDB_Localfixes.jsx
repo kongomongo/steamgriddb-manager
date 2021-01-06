@@ -2,14 +2,17 @@ const SGDB = window.require('steamgriddb');
 const fs = window.require('fs');
 const jsonminify = window.require('jsonminify');
 
+// overwrite methods to fix non-existent id's in SGDB into native SGDB ids
 class SGDB_Localfixes extends SGDB {
     constructor(options) {
         super(options);
 
-        this.LoadLocalFixes();
+        // load the local JSON file
+        this.loadLocalFixes();
     }
 
-    LoadLocalFixes() {
+    // file must reside in CWD
+    loadLocalFixes() {
         const localFixesFile = "LocalFixes.JSON";
         this.localFixes = {};
 
@@ -19,39 +22,53 @@ class SGDB_Localfixes extends SGDB {
         }
     }
 
+    // overwritten method, fixes id and calls base class
     getGame(options) {
+        // API must be called with 'id' for native SGDB ids
         var fixedType = 'id';
 
         idsByType = this.fixIds(options.type, options.id, fixedType);
+        // if we have found a fixed id, use it
         if (typeof idsByType.types[fixedType] !== "undefined") {
             options.type = fixedType;
             options.id = idsByType.orderedFixedIds[0];
         }
+        // call base
         return super.getGame(options);
     }
 
+    // overwritten method, fixes id and calls base class
     getHeroes(options) {
         return this.getPromiseWithFixedOptions("getHeroes", options);
     }
 
+    // overwritten method, fixes id and calls base class
     getGrids(options) {
         return this.getPromiseWithFixedOptions("getGrids", options);
     }
 
+    // general method for functions that take options with multiple ids, fixes ids and (possibly multiply) calls base class for each type
     getPromiseWithFixedOptions(func, options) {
         return new Promise((resolve, reject) => {
             var promises = [];
 
+            // get a list of ids grouped by type, after they have been fixed.
+            // here API must be called with 'game' for native SGDB ids  
             idsByType = this.fixIds(options.type, options.id, 'game');
-            idOrder = options.id.split(",");
 
+            // remember original order of id, caller expects the results in this order! we use the fixed id's here because we use them for comparison later on
+            // push onto the promises, so we get them in the .all() call
             promises.push(idsByType.orderedFixedIds);
 
+            // make one request per type (API can only query one type per call)
             for (var type in idsByType.types) {
                 var ids = idsByType.types[type];
                 options.id = ids.join(",");
                 options.type = type;
+
+                // push the queried ids to the promise, so we know which result belongs to which id in .all()
                 promises.push(ids);
+                // select method, can this be done more elegant? pass method?
                 switch (func) {
                     case "getHeroes":
                         promises.push(super.getHeroes(options));
@@ -62,22 +79,34 @@ class SGDB_Localfixes extends SGDB {
                     }
             };
 
+            // here we get all results:
+            // [0] HEADER: Array of original query as fixedIds
+            // [a] IDs: Array of ids for a given type 
+            // [a+1] IDs: Array of results for a given type
+            // [b]: next IDs
+            // [b+1]: next results
             Promise.all(promises).then((res) => {
                 var idOrder = res[0];
+                // create an object remembering results by id
                 var resultsById = {};
 
                 for (var i = 1; i < res.length; i += 2) {
                     var currentIds = res[i];
                     var response = res[i + 1];
 
+                    // the API returns nested objects when multiple ids are queried
+                    // _formatResponse expects plain when 1 id is queried and nested if multiple
+                    // emulate that here
                     currentIds.map((id, num) => {
-                        if (currentIds.length == 1)
+                        // if API expects nested and we have only one result -> nest it
+                        if (idOrder.length > 1 && currentIds.length == 1)
                             resultsById[id] = { success: true, data: response };
                         else
                             resultsById[id] = response[num];
                     });
                 }
 
+                // we have all the results for every (fixed) id, time to create an array for the result
                 var ret = [];
 
                 idOrder.map((id) => {
@@ -91,16 +120,10 @@ class SGDB_Localfixes extends SGDB {
         });
     }
 
-    // fixOptions(options) {
-    //     try {
-    //         var res = this.fixIds(options.type, options.id); 
-    //         options.type = "game";
-    //     }
-    //     catch {
-    //         return options;
-    //     }
-    // }
-
+    // check if we have a fix for given type/id combinations and return fixed ids by type
+    // we return an object like that
+    // obj.orderedFixedIds: Array of fixed(!) ids in original order
+    // obj.types: object with property for each type that has an array of fixed ids, i.e. obj.types["egs"]
     fixIds(type, ids, fixedType) {
         var res = {};
         res.types = [];
@@ -112,6 +135,7 @@ class SGDB_Localfixes extends SGDB {
             var newId = id;
             var newType = type;
 
+            // did we find a fixed entry?
             if (typeof fixedGame !== 'undefined') {
                 newId = fixedGame.id;
                 newType = fixedType;
