@@ -81,39 +81,51 @@ class SGDB_Localfixes extends SGDB {
 
             // here we get all results:
             // [0] HEADER: Array of original query as fixedIds
-            // [a] IDs: Array of ids for a given type 
-            // [a+1] IDs: Array of results for a given type
-            // [b]: next IDs
-            // [b+1]: next results
+            // [1] IDs: Array of ids for a given type 
+            // [2] IDs: Array of results for a given type
+            // [3] next IDs
+            // [4] next results
             Promise.all(promises).then((res) => {
                 var idOrder = res[0];
-                // create an object remembering results by id
-                var resultsById = {};
 
-                for (var i = 1; i < res.length; i += 2) {
-                    var currentIds = res[i];
-                    var response = res[i + 1];
+                // only one id queried -> just return the result
+                if (idOrder.length == 1)
+                {
+                    let response = res[2];
 
-                    // the API returns nested objects when multiple ids are queried
-                    // _formatResponse expects plain when 1 id is queried and nested if multiple
-                    // emulate that here
-                    currentIds.map((id, num) => {
-                        // if API expects nested and we have only one result -> nest it
-                        if (idOrder.length > 1 && currentIds.length == 1)
-                            resultsById[id] = { success: true, data: response };
-                        else
-                            resultsById[id] = response[num];
-                    });
+                    resolve(response);
                 }
+                else {
+                    // create an object remembering results by id
+                    let resultsById = {};
 
-                // we have all the results for every (fixed) id, time to create an array for the result
-                var ret = [];
+                    for (var i = 1; i < res.length; i += 2) {
+                        let currentIds = res[i];
+                        let response = res[i + 1];
 
-                idOrder.map((id) => {
-                    ret.push(resultsById[id]);
-                });
+                        // the API returns nested objects when multiple ids are queried
+                        // caller expects plain when 1 id is queried and nested if multiple
+                        // since we might make multiple single queries out of a multi we need 
+                        // to emulate that here
+                        currentIds.map((id, num) => {
+                            // if API expects nested and we have only one result -> nest it
+                            if (currentIds.length == 1) {
+                                resultsById[id] = { success: true, data: response };
+                            }
+                            else
+                                resultsById[id] = response[num];
+                        });
+                    }
 
-                resolve(ret);
+                    // we have all the results for every (fixed) id, time to create an array for the result
+                    var ret = [];
+
+                    idOrder.map((id) => {
+                        ret.push(resultsById[id]);
+                    });
+
+                    resolve(ret);
+                }
             }).catch((err) => {
                 reject(err);
             });
