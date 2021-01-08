@@ -162,4 +162,4 @@ class SGDB_Localfixes extends SGDB {
     }
 }
 
-module.exports = SGDB_Localfixes;
+export default SGDB_Localfixes;
