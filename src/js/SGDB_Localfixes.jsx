@@ -54,7 +54,7 @@ class SGDB_Localfixes extends SGDB {
 
             // get a list of ids grouped by type, after they have been fixed.
             // here API must be called with 'game' for native SGDB ids  
-            idsByType = this.fixIds(options.type, options.id, 'game');
+            let idsByType = this.fixIds(options.type, options.id, 'game');
 
             // remember original order of id, caller expects the results in this order! we use the fixed id's here because we use them for comparison later on
             // push onto the promises, so we get them in the .all() call
