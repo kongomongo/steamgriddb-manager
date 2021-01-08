@@ -27,7 +27,7 @@ class SGDB_Localfixes extends SGDB {
         // API must be called with 'id' for native SGDB ids
         var fixedType = 'id';
 
-        idsByType = this.fixIds(options.type, options.id, fixedType);
+        let idsByType = this.fixIds(options.type, options.id, fixedType);
         // if we have found a fixed id, use it
         if (typeof idsByType.types[fixedType] !== "undefined") {
             options.type = fixedType;
