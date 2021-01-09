@@ -47,6 +47,11 @@ class SGDB_Localfixes extends SGDB {
         return this.getPromiseWithFixedOptions("getGrids", options);
     }
 
+    // overwritten method, fixes id and calls base class
+    getLogos(options) {
+        return this.getPromiseWithFixedOptions("getLogos", options);
+    }
+
     // general method for functions that take options with multiple ids, fixes ids and (possibly multiply) calls base class for each type
     getPromiseWithFixedOptions(func, options) {
         return new Promise((resolve, reject) => {
@@ -75,6 +80,9 @@ class SGDB_Localfixes extends SGDB {
                         break;
                     case "getGrids":
                         promises.push(super.getGrids(options));
+                        break;
+                    case "getLogos":
+                        promises.push(super.getLogos(options));
                         break;
                     }
             };
