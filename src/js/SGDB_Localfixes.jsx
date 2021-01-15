@@ -149,7 +149,7 @@ class SGDB_Localfixes extends SGDB {
         res.types = [];
         res.orderedFixedIds = [];
 
-        ids.split(",").forEach(id => {
+        ids.toString().split(",").forEach(id => {
             var fixedGame = undefined;
             try { fixedGame = this.localFixes[type][id] } catch {}
             var newId = id;
