@@ -37,6 +37,19 @@ class SGDB_Localfixes extends SGDB {
         return super.getGame(options);
     }
 
+    // overwritten method, replaces online lookup with a local fix
+    searchGame(term) {
+        let fix = this.localFixes["searchGame"][term];
+
+        if (fix) {
+            return new Promise((resolve, reject) => {
+                resolve([fix]);
+            });
+        }
+
+        return super.searchGame(term);
+    }
+
     // overwritten method, fixes id and calls base class
     getHeroes(options) {
         return this.getPromiseWithFixedOptions("getHeroes", options);

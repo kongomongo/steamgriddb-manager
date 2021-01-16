@@ -8,6 +8,9 @@
     "bnet": {},
     "oculus": {},
     "uplay": {},
-    "origin": {}
+    "origin": {},
+    "searchGame": {
+      "MinecraftLauncher":{"id":38365, "name":"Minecraft"}
+    }
   }
   
